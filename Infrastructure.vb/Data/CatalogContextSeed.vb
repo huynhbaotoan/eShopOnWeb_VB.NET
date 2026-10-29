@@ -14,6 +14,7 @@ Namespace Data
                             ) As Task
 
             Dim retryForAvailability As Integer = retry.Value
+            Dim caughtException As Exception = Nothing
             Try
                 ' TODO: Only run this if using a real database
                 ' context.Database.Migrate();
@@ -43,14 +44,21 @@ Namespace Data
                 End If
 
             Catch ex As Exception
+                caughtException = ex
                 If retryForAvailability < 10 Then
                     retryForAvailability += 1
                     Dim log = loggerFactory.CreateLogger(Of CatalogContextSeed)()
                     log.LogError(ex.Message)
-                    Task.Run(Sub() SeedAsync(catalogContext, loggerFactory, retryForAvailability)).Wait()
                 End If
-                Throw
             End Try
+
+            If caughtException IsNot Nothing Then
+                If retryForAvailability > 0 AndAlso retryForAvailability <= 10 Then
+                    Await SeedAsync(catalogContext, loggerFactory, retryForAvailability)
+                Else
+                    Throw caughtException
+                End If
+            End If
         End Function
 
         Private Shared Function GetPreconfiguredCatalogBrands() As IEnumerable(Of CatalogBrand)

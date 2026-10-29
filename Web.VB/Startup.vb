@@ -1,4 +1,3 @@
-Imports Ardalis.ListStartupServices
 Imports MediatR
 Imports Microsoft.AspNetCore.Builder
 Imports Microsoft.AspNetCore.Diagnostics.HealthChecks
@@ -26,8 +25,6 @@ Imports Microsoft.eShopWeb.Web.ViewModels
 Imports Microsoft.eShopWeb.ApplicationCore
 
 Public Class Startup
-    Private _services As IServiceCollection
-
     Public Sub New(ByVal configuration As IConfiguration)
         Me.Configuration = configuration
     End Sub
@@ -57,7 +54,7 @@ Public Class Startup
     Public Sub ConfigureServices(ByVal services As IServiceCollection)
         ConfigureCookieSettings(services)
         CreateIdentityIfNotCreated(services)
-        services.AddMediatR(GetType(BasketViewModelService).Assembly)
+        services.AddMediatR(Sub(cfg) cfg.RegisterServicesFromAssemblyContaining(Of BasketViewModelService)())
         services.AddScoped(GetType(IAsyncRepository(Of)), GetType(EfRepository(Of)))
         services.AddScoped(Of ICatalogViewModelService, CachedCatalogViewModelService)()
         services.AddScoped(Of IBasketService, BasketService)()
@@ -90,11 +87,6 @@ Public Class Startup
         .Version = "v1"
     }))
         services.AddHealthChecks()
-        services.Configure(Of ServiceConfig)(Function(config)
-                                                 config.Services = New List(Of ServiceDescriptor)(services)
-                                                 config.Path = "/allservices"
-                                             End Function)
-        _services = services
     End Sub
 
     Private Shared Sub CreateIdentityIfNotCreated(ByVal services As IServiceCollection)
@@ -110,11 +102,11 @@ Public Class Startup
     End Sub
 
     Private Shared Sub ConfigureCookieSettings(ByVal services As IServiceCollection)
-        services.Configure(Of CookiePolicyOptions)(Function(options)
+        services.Configure(Of CookiePolicyOptions)(Sub(options)
                                                        options.CheckConsentNeeded = Function(context) True
                                                        options.MinimumSameSitePolicy = SameSiteMode.None
-                                                   End Function)
-        services.ConfigureApplicationCookie(Function(options)
+                                                   End Sub)
+        services.ConfigureApplicationCookie(Sub(options)
                                                 options.Cookie.HttpOnly = True
                                                 options.ExpireTimeSpan = TimeSpan.FromHours(1)
                                                 options.LoginPath = "/Account/Login"
@@ -122,7 +114,7 @@ Public Class Startup
                                                 options.Cookie = New CookieBuilder With {
                                                     .IsEssential = True
                                                 }
-                                            End Function)
+                                            End Sub)
     End Sub
 
     Public Sub Configure(ByVal app As IApplicationBuilder, ByVal env As IWebHostEnvironment)
@@ -146,8 +138,7 @@ Public Class Startup
 
         If env.IsDevelopment() Then
             app.UseDeveloperExceptionPage()
-            app.UseShowAllServicesMiddleware()
-            app.UseDatabaseErrorPage()
+            app.UseMigrationsEndPoint()
         Else
             app.UseExceptionHandler("/Error")
             app.UseHsts()
@@ -160,14 +151,14 @@ Public Class Startup
         app.UseAuthentication()
         app.UseAuthorization()
         app.UseSwagger()
-        app.UseSwaggerUI(Function(c)
+        app.UseSwaggerUI(Sub(c)
                              c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1")
-                         End Function)
-        app.UseEndpoints(Function(endpoints)
+                         End Sub)
+        app.UseEndpoints(Sub(endpoints)
                              endpoints.MapControllerRoute("default", "{controller:slugify=Home}/{action:slugify=Index}/{id?}")
                              endpoints.MapRazorPages()
                              endpoints.MapHealthChecks("home_page_health_check")
                              endpoints.MapHealthChecks("api_health_check")
-                         End Function)
+                         End Sub)
     End Sub
 End Class
