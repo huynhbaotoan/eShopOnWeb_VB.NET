@@ -13,8 +13,9 @@ Namespace Data
                               Optional retry As Integer? = 0
                             ) As Task
 
-            Dim retryForAvailability As Integer = retry.Value
-            Try
+        Dim retryForAvailability As Integer = retry.Value
+        Dim retryException As Exception = Nothing
+        Try
                 ' TODO: Only run this if using a real database
                 ' context.Database.Migrate();
 
@@ -42,15 +43,21 @@ Namespace Data
                     Await catalogContext.SaveChangesAsync()
                 End If
 
-            Catch ex As Exception
-                If retryForAvailability < 10 Then
-                    retryForAvailability += 1
-                    Dim log = loggerFactory.CreateLogger(Of CatalogContextSeed)()
-                    log.LogError(ex.Message)
-                    Task.Run(Sub() SeedAsync(catalogContext, loggerFactory, retryForAvailability)).Wait()
-                End If
+        Catch ex As Exception
+            If retryForAvailability < 10 Then
+                retryForAvailability += 1
+                Dim log = loggerFactory.CreateLogger(Of CatalogContextSeed)()
+                log.LogError(ex.Message)
+                retryException = ex
+            Else
                 Throw
-            End Try
+            End If
+        End Try
+
+        ' Await cannot be used inside a Catch block in VB.NET; retry after the Try/Catch.
+        If retryException IsNot Nothing Then
+            Await SeedAsync(catalogContext, loggerFactory, retryForAvailability)
+        End If
         End Function
 
         Private Shared Function GetPreconfiguredCatalogBrands() As IEnumerable(Of CatalogBrand)
