@@ -14,19 +14,19 @@ Namespace Areas.Identity.Pages.Account
         Private ReadOnly _signInManager As SignInManager(Of ApplicationUser)
         Private ReadOnly _logger As ILogger(Of LogoutModel)
 
+        <BindProperty(SupportsGet:=True)>
+        Public Property ReturnUrl As String
+
         Public Sub New(ByVal signInManager As SignInManager(Of ApplicationUser), ByVal logger As ILogger(Of LogoutModel))
             _signInManager = signInManager
             _logger = logger
         End Sub
 
-        Public Async Function OnGet(ByVal Optional returnUrl As String = Nothing) As Task(Of IActionResult)
-            Await _signInManager.SignOutAsync()
-            _logger.LogInformation("User logged out.")
-
-            If returnUrl IsNot Nothing Then
-                Return LocalRedirect(returnUrl)
-            End If
-
+        Public Function OnGet(ByVal Optional returnUrl As String = Nothing) As IActionResult
+            ' Side-effect free: signing out on GET would let any cross-site
+            ' <img src="/Identity/Account/Logout"> or link prefetch log the user out.
+            ' The actual sign-out happens in OnPost (antiforgery-protected).
+            ReturnUrl = returnUrl
             Return Page()
         End Function
 
@@ -34,8 +34,10 @@ Namespace Areas.Identity.Pages.Account
             Await _signInManager.SignOutAsync()
             _logger.LogInformation("User logged out.")
 
-            If returnUrl IsNot Nothing Then
-                Return LocalRedirect(returnUrl)
+            Dim target = If(returnUrl, ReturnUrl)
+
+            If Not String.IsNullOrEmpty(target) AndAlso Url.IsLocalUrl(target) Then
+                Return LocalRedirect(target)
             End If
 
             Return RedirectToPage("/Index")

@@ -36,6 +36,10 @@ Public Class Program
         Dim services = builder.Services
 
         ' Database providers: in-memory for Development/Testing, SQL Server otherwise.
+        ' Deliberate improvement over the baseline Startup convention: baseline relied on
+        ' Configure{Environment}Services, so an environment such as "Staging" matched no
+        ' method, registered NO DbContext and failed at first resolve. Every non
+        ' Development/Testing environment now gets the SQL Server registration.
         If builder.Environment.IsDevelopment() OrElse builder.Environment.IsEnvironment("Testing") Then
             ConfigureInMemoryDatabases(services)
         Else
@@ -99,10 +103,10 @@ Public Class Program
         .Version = "v1"
     }))
         services.AddHealthChecks()
-        services.Configure(Of ServiceConfig)(Function(config)
+        services.Configure(Of ServiceConfig)(Sub(config)
                                                  config.Services = New List(Of ServiceDescriptor)(services)
                                                  config.Path = "/allservices"
-                                             End Function)
+                                             End Sub)
     End Sub
 
     Private Shared Sub CreateIdentityIfNotCreated(ByVal services As IServiceCollection)
@@ -118,11 +122,11 @@ Public Class Program
     End Sub
 
     Private Shared Sub ConfigureCookieSettings(ByVal services As IServiceCollection)
-        services.Configure(Of CookiePolicyOptions)(Function(options)
+        services.Configure(Of CookiePolicyOptions)(Sub(options)
                                                        options.CheckConsentNeeded = Function(context) True
                                                        options.MinimumSameSitePolicy = SameSiteMode.None
-                                                   End Function)
-        services.ConfigureApplicationCookie(Function(options)
+                                                   End Sub)
+        services.ConfigureApplicationCookie(Sub(options)
                                                 options.Cookie.HttpOnly = True
                                                 options.ExpireTimeSpan = TimeSpan.FromHours(1)
                                                 options.LoginPath = "/Identity/Account/Login"
@@ -130,7 +134,7 @@ Public Class Program
                                                 options.Cookie = New CookieBuilder With {
                                                     .IsEssential = True
                                                 }
-                                            End Function)
+                                            End Sub)
     End Sub
 
     Public Shared Sub Configure(ByVal app As WebApplication, ByVal env As IWebHostEnvironment)
@@ -168,9 +172,9 @@ Public Class Program
         app.UseAuthentication()
         app.UseAuthorization()
         app.UseSwagger()
-        app.UseSwaggerUI(Function(c)
+        app.UseSwaggerUI(Sub(c)
                              c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1")
-                         End Function)
+                         End Sub)
 
         app.MapControllerRoute("default", "{controller:slugify=Home}/{action:slugify=Index}/{id?}")
         app.MapRazorPages()
@@ -179,20 +183,28 @@ Public Class Program
     End Sub
 
     Private Shared Sub SeedDatabases(ByVal app As WebApplication)
+        ' Startup-only: VB has no async entry point, so the async seeding path is
+        ' awaited here via GetAwaiter().GetResult(). This replaces the previous
+        ' Task.Run(Sub() ...SeedAsync(...)).Wait() which never awaited the returned
+        ' Task (fire-and-forget: the app could start before seeding completed).
+        SeedDatabasesAsync(app).GetAwaiter().GetResult()
+    End Sub
+
+    Private Shared Async Function SeedDatabasesAsync(ByVal app As WebApplication) As Task
         Using scope = app.Services.CreateScope()
             Dim Services = scope.ServiceProvider
             Dim LoggerFactory = Services.GetRequiredService(Of ILoggerFactory)()
             Try
                 Dim CatalogContext = Services.GetRequiredService(Of CatalogContext)()
-                Task.Run(Sub() CatalogContextSeed.SeedAsync(CatalogContext, LoggerFactory)).Wait()
+                Await CatalogContextSeed.SeedAsync(CatalogContext, LoggerFactory)
 
                 Dim UserManager = Services.GetRequiredService(Of UserManager(Of ApplicationUser))()
                 Dim RoleManager = Services.GetRequiredService(Of RoleManager(Of IdentityRole))()
-                Task.Run(Sub() AppIdentityDbContextSeed.SeedAsync(UserManager, RoleManager)).Wait()
+                Await AppIdentityDbContextSeed.SeedAsync(UserManager, RoleManager)
             Catch ex As Exception
                 Dim Logger = LoggerFactory.CreateLogger(Of Program)()
                 Logger.LogError(ex, "An error occurred seeding the DB.")
             End Try
         End Using
-    End Sub
+    End Function
 End Class
