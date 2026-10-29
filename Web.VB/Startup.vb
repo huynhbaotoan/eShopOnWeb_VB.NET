@@ -147,7 +147,7 @@ Public Class Startup
         If env.IsDevelopment() Then
             app.UseDeveloperExceptionPage()
             app.UseShowAllServicesMiddleware()
-            app.UseDatabaseErrorPage()
+            app.UseMigrationsEndPoint()
         Else
             app.UseExceptionHandler("/Error")
             app.UseHsts()
