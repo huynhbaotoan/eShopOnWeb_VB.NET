@@ -316,7 +316,6 @@
 /data/code/Web.VB/bin/Debug/net10.0/refs/System.Xml.XPath.dll
 /data/code/Web.VB/bin/Debug/net10.0/refs/System.Xml.XPath.XDocument.dll
 /data/code/Web.VB/bin/Debug/net10.0/refs/WindowsBase.dll
-/data/code/Web.VB/bin/Debug/net10.0/Ardalis.EFCore.Extensions.dll
 /data/code/Web.VB/bin/Debug/net10.0/Ardalis.GuardClauses.dll
 /data/code/Web.VB/bin/Debug/net10.0/Ardalis.ListStartupServices.dll
 /data/code/Web.VB/bin/Debug/net10.0/Azure.Core.dll

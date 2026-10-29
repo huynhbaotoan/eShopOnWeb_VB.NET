@@ -2,22 +2,6 @@
   "version": 4,
   "targets": {
     "net10.0": {
-      "Ardalis.EFCore.Extensions/1.1.0": {
-        "type": "package",
-        "dependencies": {
-          "Microsoft.EntityFrameworkCore": "2.2.6"
-        },
-        "compile": {
-          "lib/netstandard2.0/Ardalis.EFCore.Extensions.dll": {
-            "related": ".pdb"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/Ardalis.EFCore.Extensions.dll": {
-            "related": ".pdb"
-          }
-        }
-      },
       "Ardalis.GuardClauses/1.4.2": {
         "type": "package",
         "dependencies": {
@@ -78,6 +62,12 @@
           "lib/net8.0/Azure.Identity.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "BuildBundlerMinifier/2.9.406": {
+        "type": "package",
+        "build": {
+          "build/BuildBundlerMinifier.targets": {}
         }
       },
       "Humanizer/2.14.1": {
@@ -2865,7 +2855,7 @@
       },
       "ApplicationCore.vb/1.0.0": {
         "type": "project",
-        "framework": ".NETStandard,Version=v2.1",
+        "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
           "Ardalis.GuardClauses": "1.4.2"
         },
@@ -2878,36 +2868,26 @@
       },
       "Infrastructure.vb/1.0.0": {
         "type": "project",
-        "framework": ".NETStandard,Version=v2.1",
+        "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
           "ApplicationCore.vb": "1.0.0",
-          "Ardalis.EFCore.Extensions": "1.1.0",
-          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "3.1.0",
-          "Microsoft.EntityFrameworkCore.SqlServer": "3.1.0"
+          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "10.0.14",
+          "Microsoft.EntityFrameworkCore.SqlServer": "10.0.14",
+          "System.Security.Cryptography.Pkcs": "10.0.14"
         },
         "compile": {
           "bin/placeholder/Infrastructure.vb.dll": {}
         },
         "runtime": {
           "bin/placeholder/Infrastructure.vb.dll": {}
-        }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
       }
     }
   },
   "libraries": {
-    "Ardalis.EFCore.Extensions/1.1.0": {
-      "sha512": "cbedfw9S1tfHt8mFCqFXSE5wTbN/dNKHZl9WrQ2su0FhOzmO3/Cr+fqf6qCaWjpq8lyfX8CWQWZYxKhcE3oj1A==",
-      "type": "package",
-      "path": "ardalis.efcore.extensions/1.1.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "ardalis.efcore.extensions.1.1.0.nupkg.sha512",
-        "ardalis.efcore.extensions.nuspec",
-        "lib/netstandard2.0/Ardalis.EFCore.Extensions.dll",
-        "lib/netstandard2.0/Ardalis.EFCore.Extensions.pdb"
-      ]
-    },
     "Ardalis.GuardClauses/1.4.2": {
       "sha512": "O8CWAecu5EbJ7EG+7iIe+/PxsCv5YGMe3vtTC39LJzWPlecy8LaCY/VThS85RWb3lq1uFU/+jIFjCXXe0nbRTg==",
       "type": "package",
@@ -2975,6 +2955,28 @@
         "lib/net8.0/Azure.Identity.xml",
         "lib/netstandard2.0/Azure.Identity.dll",
         "lib/netstandard2.0/Azure.Identity.xml"
+      ]
+    },
+    "BuildBundlerMinifier/2.9.406": {
+      "sha512": "jNgso4DDVEDTmM2O41WWI8OMC5CV0yMqMK/cRMJldO64XzC2PDdg+FV/GHqN6qh3KDuTKcDlB/t7F2WBWrNOgQ==",
+      "type": "package",
+      "path": "buildbundlerminifier/2.9.406",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/BuildBundlerMinifier.targets",
+        "buildbundlerminifier.2.9.406.nupkg.sha512",
+        "buildbundlerminifier.nuspec",
+        "tools/net46/BundlerMinifier.dll",
+        "tools/net46/NUglify.dll",
+        "tools/net46/Newtonsoft.Json.dll",
+        "tools/netcoreapp2.0/BundlerMinifier.dll",
+        "tools/netcoreapp2.0/NUglify.dll",
+        "tools/netcoreapp2.0/Newtonsoft.Json.dll",
+        "tools/netstandard1.3/BundlerMinifier.dll",
+        "tools/netstandard1.3/NUglify.dll",
+        "tools/netstandard1.3/Newtonsoft.Json.dll"
       ]
     },
     "Humanizer/2.14.1": {
@@ -7604,6 +7606,7 @@
     "net10.0": [
       "ApplicationCore.vb >= 1.0.0",
       "Ardalis.ListStartupServices >= 1.1.4",
+      "BuildBundlerMinifier >= 2.9.406",
       "Infrastructure.vb >= 1.0.0",
       "MediatR >= 14.2.0",
       "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore >= 10.0.14",
@@ -7680,6 +7683,11 @@
           "Ardalis.ListStartupServices": {
             "target": "Package",
             "version": "[1.1.4, )"
+          },
+          "BuildBundlerMinifier": {
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[2.9.406, )"
           },
           "MediatR": {
             "target": "Package",
