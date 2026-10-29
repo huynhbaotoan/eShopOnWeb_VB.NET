@@ -1,0 +1,13 @@
+@page "/Identity/Account/Logout"
+@model LogoutModel
+@{
+    ViewData["Title"] = "Log out";
+}
+
+<div class="esh-identity">
+    <h1>@ViewData["Title"]</h1>
+    <p>You have been signed out of your account.</p>
+    <form method="post">
+        <button type="submit" class="btn btn-default">Sign out of all sessions</button>
+    </form>
+</div>
